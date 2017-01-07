@@ -74,12 +74,6 @@ public class JavaMnistDT {
                 .setLabelCol(stringIndexer.getOutputCol())
                 .setFeaturesCol(assembler.getOutputCol());
 
-        RandomForestClassifier rf = new RandomForestClassifier()
-                .setMaxDepth(25).setNumTrees(30)
-                .setLabelCol(stringIndexer.getOutputCol())
-                .setFeaturesCol(assembler.getOutputCol());
-
-        //
         IndexToString indexToString = new IndexToString()
                 .setInputCol("prediction")
                 .setOutputCol("predictedLabel")
@@ -123,5 +117,6 @@ public class JavaMnistDT {
         System.out.println( matrix );
 
         System.out.println( "Modeltraining and Test took (ms) : "+(time2-time1));
+
     }
 }
