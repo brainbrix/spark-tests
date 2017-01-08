@@ -129,7 +129,7 @@ public class JavaMnistMLPC {
                 .groupBy(stringIndexer.getInputCol())
                 .pivot(indexToString.getOutputCol(),labelNames)
                 .count()
-                .showString(10, false);
+                .showString(10, 0);
 
         // Just for better reading
         System.out.println( s.replace("null", "    "));
