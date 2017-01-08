@@ -68,7 +68,7 @@ public class JavaMnistRF {
                 .fit(train);
 
         RandomForestClassifier rf = new RandomForestClassifier()
-                .setMaxDepth(25).setNumTrees(30)
+                .setMaxDepth(25).setNumTrees(30).setSeed(12345L)
                 .setLabelCol("indexedLabel")
                 .setFeaturesCol(assembler.getOutputCol());
 
@@ -99,7 +99,7 @@ public class JavaMnistRF {
         System.out.println( "Results ----------");
 
         SQLTransformer sqlTrans3 = new SQLTransformer().setStatement(
-                "SELECT (100.0*count(*)/"+test.count()+") AS Correct FROM __THIS__ where label2 = prediction");
+                "SELECT (100.0*count(*)/"+test.count()+") AS Correct FROM __THIS__ where label = prediction");
         Dataset<Row> df4 = sqlTrans3.transform(result);
         df4.show();
 
@@ -110,13 +110,15 @@ public class JavaMnistRF {
             labels2.add( s );
         }
 
-        String s = result.select(new Column(stringIndexer.getInputCol()), new Column("prediction"))
+        String matrix = result.select(new Column(stringIndexer.getInputCol()), new Column(indexToString.getOutputCol()))
                         .orderBy(stringIndexer.getInputCol())
                         .groupBy(stringIndexer.getInputCol())
-                        .pivot("prediction",labels2)
+                        .pivot(indexToString.getOutputCol(),labels2)
                         .count()
                         .showString(10, 0)
                         .replace("null", "    ");
+
+        System.out.println( matrix );
 
         System.out.println( "Modeltraining and Test took (min) : "+(time2-time1) / (1000*60));
     }
