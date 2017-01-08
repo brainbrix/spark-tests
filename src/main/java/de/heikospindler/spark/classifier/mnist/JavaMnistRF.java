@@ -99,7 +99,7 @@ public class JavaMnistRF {
         System.out.println( "Results ----------");
 
         SQLTransformer sqlTrans3 = new SQLTransformer().setStatement(
-                "SELECT (100.0*count(*)/"+test.count()+") AS Correct FROM __THIS__ where label = prediction");
+                "SELECT (100.0*count(*)/"+test.count()+") AS Correct FROM __THIS__ where label = predictedLabel");
         Dataset<Row> df4 = sqlTrans3.transform(result);
         df4.show();
 
@@ -120,6 +120,6 @@ public class JavaMnistRF {
 
         System.out.println( matrix );
 
-        System.out.println( "Modeltraining and Test took (min) : "+(time2-time1) / (1000*60));
+        System.out.println( "Model training and Test took (sec.) : "+(time2-time1) / (1000));
     }
 }

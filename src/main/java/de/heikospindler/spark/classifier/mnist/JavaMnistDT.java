@@ -114,7 +114,7 @@ public class JavaMnistDT {
 
         System.out.println( matrix );
 
-        System.out.println( "Modeltraining and Test took (sec.) : "+(time2-time1)/1000);
+        System.out.println( "Model training and Test took (sec.) : "+(time2-time1)/1000);
 
     }
 }
