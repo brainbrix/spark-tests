@@ -6,7 +6,6 @@ import org.apache.spark.ml.Pipeline;
 import org.apache.spark.ml.PipelineModel;
 import org.apache.spark.ml.PipelineStage;
 import org.apache.spark.ml.classification.DecisionTreeClassifier;
-import org.apache.spark.ml.classification.RandomForestClassifier;
 import org.apache.spark.ml.feature.IndexToString;
 import org.apache.spark.ml.feature.StringIndexer;
 import org.apache.spark.ml.feature.StringIndexerModel;
@@ -39,11 +38,11 @@ public class JavaMnistDT {
 
         Dataset<Row> test = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_test2.csv")
-                .filter(e ->  Math.random() > 0.50 );
+                .filter(e ->  Math.random() > 0.00 );
 
         Dataset<Row> train = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_train2.csv")
-                .filter(e ->  Math.random() > 0.50 );
+                .filter(e ->  Math.random() > 0.00 );
 
         System.out.println( "Using training entries: "+train.count());
         System.out.println( "Using test entries: "+test.count());
@@ -70,7 +69,7 @@ public class JavaMnistDT {
 
         // Train a DecisionTree classifier.
         DecisionTreeClassifier dt = new DecisionTreeClassifier()
-                .setMaxDepth(25)
+                .setMaxDepth(30).setSeed(12345L)
                 .setLabelCol(stringIndexer.getOutputCol())
                 .setFeaturesCol(assembler.getOutputCol());
 
@@ -84,7 +83,6 @@ public class JavaMnistDT {
                         assembler
                         , stringIndexer
                         , dt
-//                        , rf
                         , indexToString
                 });
 
@@ -111,12 +109,12 @@ public class JavaMnistDT {
                         .groupBy(stringIndexer.getInputCol())
                         .pivot(indexToString.getOutputCol(),labelNames)
                         .count()
-                        .showString(10, false)
+                        .showString(10, 0)
                         .replace("null", "    ");
 
         System.out.println( matrix );
 
-        System.out.println( "Modeltraining and Test took (ms) : "+(time2-time1));
+        System.out.println( "Modeltraining and Test took (sec.) : "+(time2-time1)/1000);
 
     }
 }

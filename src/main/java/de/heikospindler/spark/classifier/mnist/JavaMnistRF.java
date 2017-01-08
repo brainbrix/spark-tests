@@ -20,7 +20,7 @@ public class JavaMnistRF {
         // Create a spark session with a name and two local nodes
         SparkSession spark = SparkSession
                 .builder()
-                .appName("JavaMNISTDT")
+                .appName("JavaMNISTRF")
                 .master("local[2]")
                 .getOrCreate();
 
@@ -36,11 +36,11 @@ public class JavaMnistRF {
 
         Dataset<Row> test = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_test2.csv")
-                .filter(e ->  Math.random() > 0.80 );
+                .filter(e ->  Math.random() > 0.00 );
 
         Dataset<Row> train = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_train2.csv")
-                .filter(e ->  Math.random() > 0.80 );
+                .filter(e ->  Math.random() > 0.00 );
 
 
         System.out.println( "Using training entries: "+train.count());
@@ -110,12 +110,12 @@ public class JavaMnistRF {
             labels2.add( s );
         }
 
-        String s = result.select(new Column("label2"), new Column("prediction"))
-                        .orderBy("label2")
-                        .groupBy("label2")
+        String s = result.select(new Column(stringIndexer.getInputCol()), new Column("prediction"))
+                        .orderBy(stringIndexer.getInputCol())
+                        .groupBy(stringIndexer.getInputCol())
                         .pivot("prediction",labels2)
                         .count()
-                        .showString(10, false)
+                        .showString(10, 0)
                         .replace("null", "    ");
 
         System.out.println( "Modeltraining and Test took (min) : "+(time2-time1) / (1000*60));
