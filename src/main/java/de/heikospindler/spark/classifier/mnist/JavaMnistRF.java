@@ -9,8 +9,10 @@ import org.apache.spark.ml.classification.DecisionTreeClassifier;
 import org.apache.spark.ml.classification.RandomForestClassifier;
 import org.apache.spark.ml.feature.*;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.StructType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class JavaMnistRF {
@@ -52,10 +54,9 @@ public class JavaMnistRF {
         // Create the workflow steps
 
         // Create an array with the names of the pixel columns p0..p783
-        String[] inputFeatures = new String[PIXEL_COUNT];
-        for ( int index = 0; index < PIXEL_COUNT; index ++) {
-            inputFeatures[index] = "p"+index;
-        }
+        StructType schema = train.schema();
+        String[] inputFeatures = Arrays.copyOfRange(schema.fieldNames(), 1, schema.fieldNames().length);
+
 
         VectorAssembler assembler = new VectorAssembler()
                 .setInputCols( inputFeatures )
@@ -68,7 +69,7 @@ public class JavaMnistRF {
                 .fit(train);
 
         RandomForestClassifier rf = new RandomForestClassifier()
-                .setMaxDepth(25).setNumTrees(30).setSeed(12345L)
+                .setMaxDepth(30).setNumTrees(30).setSeed(12345L)
                 .setLabelCol("indexedLabel")
                 .setFeaturesCol(assembler.getOutputCol());
 

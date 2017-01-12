@@ -7,6 +7,7 @@ import org.apache.spark.ml.PipelineStage;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassifier;
 import org.apache.spark.ml.feature.*;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.StructType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,17 +28,17 @@ public class JavaMnistMLPC {
                 .getOrCreate();
 
         // We have 784 pixel for every bitmap
-        int PIXEL_COUNT = 784;
+//        int PIXEL_COUNT = 784;
 
         // Create an array with the names of the pixel columns p0..p783
-        String[] inputFeatures = new String[PIXEL_COUNT];
-        for ( int index = 0; index < PIXEL_COUNT; index ++) {
-            inputFeatures[index] = "p"+index;
-        }
+//        String[] inputFeatures = new String[PIXEL_COUNT];
+//        for ( int index = 0; index < PIXEL_COUNT; index ++) {
+//            inputFeatures[index] = "p"+index;
+//        }
 
 
         // Define the neuronal net work topology
-        int[] layers = { PIXEL_COUNT, 70, 30, 10 };
+        int[] layers = { 784, 100, 50, 10 };
 
         // Prepare training and test data.
         DataFrameReader reader = spark.read()
@@ -48,17 +49,21 @@ public class JavaMnistMLPC {
 
         Dataset<Row> test = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_test2.csv")
-                .filter(e ->  Math.random() > 0.98 );
+                .filter(e ->  Math.random() > 0.95 );
 
         Dataset<Row> train = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_train2.csv")
-                .filter(e ->  Math.random() > 0.98 );
+                .filter(e ->  Math.random() > 0.95 );
 
         System.out.println( "Using training entries: "+train.count());
         System.out.println( "Using test entries: "+test.count());
 
 //        train.printSchema();
 //        train.show(5);
+
+        // Create array with the names of the pixel columns p0..p783 as input to the feature vector
+        StructType schema = train.schema();
+        String[] inputFeatures = Arrays.copyOfRange(schema.fieldNames(), 1, schema.fieldNames().length);
 
         // Create the ml pipeline elements
         VectorAssembler assembler = new VectorAssembler()
@@ -84,7 +89,7 @@ public class JavaMnistMLPC {
                 .setFeaturesCol(assembler.getOutputCol())
 //                .setFeaturesCol(binarizer.getOutputCol())
                 .setLayers(layers)
-                .setSeed(42L)
+                .setSeed(12345L)
                 .setBlockSize(128) //default 128
                 .setMaxIter(700) //default 100
                 .setTol(1e-4) //default 1e-6
@@ -107,12 +112,14 @@ public class JavaMnistMLPC {
                 });
 
         System.out.println( "Training ----------");
+        long time1 = System.currentTimeMillis();
 
         // Fit the pipeline to training documents.
         PipelineModel model = pipeline.fit(train);
 
         Dataset<Row> result = model.transform(test);
 
+        long time2 = System.currentTimeMillis();
         result.show();
         System.out.println( "Results ----------");
         SQLTransformer sqlTrans3 = new SQLTransformer().setStatement(
@@ -124,15 +131,19 @@ public class JavaMnistMLPC {
         List<Object> labelNames = Arrays.asList("0,1,2,3,4,5,6,7,8,9".split(","));
 
 
-        String s = result.select(new Column(stringIndexer.getInputCol()), new Column(indexToString.getOutputCol()))
+        String matrix = result.select(new Column(stringIndexer.getInputCol()), new Column(indexToString.getOutputCol()))
                 .orderBy(stringIndexer.getInputCol())
                 .groupBy(stringIndexer.getInputCol())
                 .pivot(indexToString.getOutputCol(),labelNames)
                 .count()
-                .showString(10, 0);
+                .showString(10, 0)
+                .replace("null", "    ");
 
         // Just for better reading
-        System.out.println( s.replace("null", "    "));
+        System.out.println( matrix );
+
+        System.out.println( "Model training and Test took (min.) : "+(time2-time1)/(1000*60));
+
     }
 
 }

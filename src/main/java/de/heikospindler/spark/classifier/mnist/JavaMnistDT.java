@@ -11,6 +11,7 @@ import org.apache.spark.ml.feature.StringIndexer;
 import org.apache.spark.ml.feature.StringIndexerModel;
 import org.apache.spark.ml.feature.VectorAssembler;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.StructType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -53,10 +54,9 @@ public class JavaMnistDT {
         // Create the workflow steps
 
         // Create array with the names of the pixel columns p0..p783 as input to the feature vector
-        String[] inputFeatures = new String[PIXEL_COUNT];
-        for ( int index = 0; index < PIXEL_COUNT; index ++) {
-            inputFeatures[index] = "p"+index;
-        }
+        StructType schema = train.schema();
+        String[] inputFeatures = Arrays.copyOfRange(schema.fieldNames(), 1, schema.fieldNames().length);
+
         VectorAssembler assembler = new VectorAssembler()
                 .setInputCols( inputFeatures )
                 .setOutputCol("features");
