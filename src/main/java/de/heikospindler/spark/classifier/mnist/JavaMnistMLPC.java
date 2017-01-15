@@ -9,7 +9,6 @@ import org.apache.spark.ml.feature.*;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.StructType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -27,18 +26,8 @@ public class JavaMnistMLPC {
                 .master("local[3]")
                 .getOrCreate();
 
-        // We have 784 pixel for every bitmap
-//        int PIXEL_COUNT = 784;
-
-        // Create an array with the names of the pixel columns p0..p783
-//        String[] inputFeatures = new String[PIXEL_COUNT];
-//        for ( int index = 0; index < PIXEL_COUNT; index ++) {
-//            inputFeatures[index] = "p"+index;
-//        }
-
-
         // Define the neuronal net work topology
-        int[] layers = { 784, 100, 50, 10 };
+        int[] layers = { 784, 200, 50, 10 };
 
         // Prepare training and test data.
         DataFrameReader reader = spark.read()
@@ -49,11 +38,11 @@ public class JavaMnistMLPC {
 
         Dataset<Row> test = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_test2.csv")
-                .filter(e ->  Math.random() > 0.95 );
+                .filter(e ->  Math.random() > 0.00 );
 
         Dataset<Row> train = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_train2.csv")
-                .filter(e ->  Math.random() > 0.95 );
+                .filter(e ->  Math.random() > 0.00 );
 
         System.out.println( "Using training entries: "+train.count());
         System.out.println( "Using test entries: "+test.count());
@@ -68,35 +57,24 @@ public class JavaMnistMLPC {
         // Create the ml pipeline elements
         VectorAssembler assembler = new VectorAssembler()
                 .setInputCols( inputFeatures )
-                .setOutputCol("features")
-                ;
-
-        Binarizer binarizer = new Binarizer()
-                .setInputCol("features")
-                .setOutputCol("bin_feature")
-                .setThreshold(128);
+                .setOutputCol("features");
 
         StringIndexerModel stringIndexer = new StringIndexer()
                 .setInputCol("label")
                 .setHandleInvalid("skip")
                 .setOutputCol("indexedLabel")
-                .fit(train)
-                ;
+                .fit(train);
 
         MultilayerPerceptronClassifier mlpc = new MultilayerPerceptronClassifier()
                 .setLabelCol(stringIndexer.getOutputCol())
-//                .setLabelCol( "label" )
                 .setFeaturesCol(assembler.getOutputCol())
-//                .setFeaturesCol(binarizer.getOutputCol())
                 .setLayers(layers)
                 .setSeed(12345L)
                 .setBlockSize(128) //default 128
-                .setMaxIter(700) //default 100
+                .setMaxIter(500) //default 100
                 .setTol(1e-4) //default 1e-6
 //                .setSolver("GD") // l-bfgs or gd
                 .setStepSize(0.02); // Default 0.03
-                ;
-
 
         IndexToString indexToString = new IndexToString()
                 .setInputCol("prediction")
@@ -106,7 +84,6 @@ public class JavaMnistMLPC {
         Pipeline pipeline = new Pipeline()
                 .setStages(new PipelineStage[] {assembler
                         , stringIndexer
-//                        , binarizer
                         , mlpc
                         , indexToString
                 });
@@ -143,7 +120,6 @@ public class JavaMnistMLPC {
         System.out.println( matrix );
 
         System.out.println( "Model training and Test took (min.) : "+(time2-time1)/(1000*60));
-
     }
 
 }
