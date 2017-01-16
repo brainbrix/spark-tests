@@ -18,9 +18,6 @@ import java.util.List;
 
 public class JavaMnistDT {
 
-    // We have 784 pixel for every bitmap
-    static final int PIXEL_COUNT = 784;
-
     public static void main(String[] args) throws Exception {
 
         // Create a spark session with a name and two local nodes
