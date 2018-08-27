@@ -1,6 +1,7 @@
 package de.heikospindler.spark.classifier.mnist;
 
 import de.heikospindler.spark.Const;
+import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.ml.Pipeline;
 import org.apache.spark.ml.PipelineModel;
 import org.apache.spark.ml.PipelineStage;
@@ -12,9 +13,6 @@ import org.apache.spark.sql.types.StructType;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by hsp on 17/12/2016.
- */
 public class JavaMnistMLPC_Binarizer {
 
     public static void main(String[] args) throws Exception {
@@ -27,7 +25,7 @@ public class JavaMnistMLPC_Binarizer {
                 .getOrCreate();
 
         // Define the neuronal net work topology
-        int[] layers = { 784, 500, 200, 50, 10 };
+        int[] layers = { 784, 800, 100,  10 };
 
         // Prepare training and test data.
         DataFrameReader reader = spark.read()
@@ -38,11 +36,11 @@ public class JavaMnistMLPC_Binarizer {
 
         Dataset<Row> test = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_test2.csv")
-                .filter(e ->  Math.random() > 0.00 );
+                .filter((FilterFunction)(e ->  Math.random() > 0.00 ));
 
         Dataset<Row> train = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_train2.csv")
-                .filter(e ->  Math.random() > 0.00 );
+                .filter((FilterFunction)(e ->  Math.random() > 0.00 ));
 
         System.out.println( "Using training entries: "+train.count());
         System.out.println( "Using test entries: "+test.count());
@@ -77,7 +75,8 @@ public class JavaMnistMLPC_Binarizer {
                 .setSeed(12345L)
                 .setBlockSize(128) //default 128
                 .setMaxIter(1000) //default 100
-                .setTol(1e-6) //default 1e-6
+//                .setMaxIter(10000) //default 100
+                .setTol(1e-7) //default 1e-6
 //                .setSolver("GD") // l-bfgs or gd
                 .setStepSize(0.02); // Default 0.03
 
@@ -119,7 +118,7 @@ public class JavaMnistMLPC_Binarizer {
                 .groupBy(stringIndexer.getInputCol())
                 .pivot(indexToString.getOutputCol(),labelNames)
                 .count()
-                .showString(10, 0)
+                .showString(10, 0, false)
                 .replace("null", "    ");
 
         // Just for better reading

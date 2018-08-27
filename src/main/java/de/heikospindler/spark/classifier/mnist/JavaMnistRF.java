@@ -2,6 +2,9 @@ package de.heikospindler.spark.classifier.mnist;
 
 
 import de.heikospindler.spark.Const;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.ml.Pipeline;
 import org.apache.spark.ml.PipelineModel;
 import org.apache.spark.ml.PipelineStage;
@@ -18,6 +21,9 @@ import java.util.List;
 public class JavaMnistRF {
 
     public static void main(String[] args) throws Exception {
+
+        LogManager.getLogger("org").setLevel(Level.WARN);
+        LogManager.getLogger("akka").setLevel(Level.OFF);
 
         // Create a spark session with a name and two local nodes
         SparkSession spark = SparkSession
@@ -38,11 +44,13 @@ public class JavaMnistRF {
 
         Dataset<Row> test = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_test2.csv")
-                .filter(e ->  Math.random() > 0.00 );
+                .filter((FilterFunction)(e ->  Math.random() > 0.80 ));
+
 
         Dataset<Row> train = reader
                 .load(Const.BASE_DIR_DATASETS+"mnist_train2.csv")
-                .filter(e ->  Math.random() > 0.00 );
+                .filter((FilterFunction)(e ->  Math.random() > 0.80 ));
+
 
 
         System.out.println( "Using training entries: "+train.count());
@@ -116,7 +124,7 @@ public class JavaMnistRF {
                         .groupBy(stringIndexer.getInputCol())
                         .pivot(indexToString.getOutputCol(),labels2)
                         .count()
-                        .showString(10, 0)
+                        .showString(10, 0, false)
                         .replace("null", "    ");
 
         System.out.println( matrix );
